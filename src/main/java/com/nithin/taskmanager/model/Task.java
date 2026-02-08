@@ -1,11 +1,27 @@
 package com.nithin.taskmanager.model;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 
+
+
+@Entity
 public class Task {
 
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String title;
-    private String description;
     private boolean completed;
+    @NotBlank(message = "Title cannot be empty")
+    @Size(min = 3, max = 100)
+    private String title;
+    @Size(max = 250)
+    private String description;
+
 
     public Task() {
     }

@@ -1,60 +1,62 @@
 package com.nithin.taskmanager.controller;
 
-
 import com.nithin.taskmanager.model.Task;
+import com.nithin.taskmanager.service.TaskService;
+import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 
-
-
-import java.util.ArrayList;
 import java.util.List;
 
 @RestController
+@RequestMapping("/tasks")
 public class TaskController {
 
-    private List<Task> tasks = new ArrayList<>();
+    private final TaskService taskService;
 
-    public TaskController() {
-        tasks.add(new Task(1L, "Learn Spring Boot", "Build first REST API", false));
-        tasks.add(new Task(2L, "Prepare DSA", "Practice arrays and strings", false));
+    public TaskController(TaskService taskService) {
+        this.taskService = taskService;
     }
 
-    @GetMapping("/tasks")
-    public List<Task> getAllTasks() {
-        return tasks;
-    }
-    @PostMapping("/tasks")
-    public Task createTask(@RequestBody Task task) {
-        task.setId((long) (tasks.size() + 1));
-        tasks.add(task);
-        return task;
-    }
-    @PutMapping("/tasks/{id}")
-    public Task updateTask(@PathVariable Long id, @RequestBody Task updatedTask) {
-        for (Task task : tasks) {
-            if (task.getId().equals(id)) {
-                task.setTitle(updatedTask.getTitle());
-                task.setDescription(updatedTask.getDescription());
-                task.setCompleted(updatedTask.isCompleted());
-                return task;
-            }
+    @GetMapping
+    public Page<Task> getAllTasks(
+            @RequestParam(required = false) Boolean completed,
+            Pageable pageable) {
+
+        if (completed != null) {
+            return taskService.getTasksByCompleted(completed, pageable);
         }
-        return null;
-    }
-    @DeleteMapping("/tasks/{id}")
-    public String deleteTask(@PathVariable Long id) {
-        tasks.removeIf(task -> task.getId().equals(id));
-        return "Task deleted successfully";
+
+        return taskService.getTasks(pageable);
     }
 
 
+    @PostMapping
+    public ResponseEntity<Task> createTask(@Valid @RequestBody Task task) {
+        Task created = taskService.createTask(task);
+        return new ResponseEntity<>(created, HttpStatus.CREATED);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Task> updateTask(@PathVariable Long id, @Valid @RequestBody Task task) {
+        Task updated = taskService.updateTask(id, task);
+        if (updated == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(updated);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteTask(@PathVariable Long id) {
+        taskService.deleteTask(id);
+        return ResponseEntity.noContent().build();
+    }
 
 }
-
