@@ -59,4 +59,10 @@ public class TaskController {
         return ResponseEntity.noContent().build();
     }
 
+    @GetMapping("/")
+    public String home() {
+    return "Task Manager API Running frontend(soon)🚀";
+}
+
+
 }
